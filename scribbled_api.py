@@ -127,10 +127,10 @@ def register_channel():
 
         with r.pipeline() as pipe:
             pipe.multi()
-            pipe.hset(name, 'src', channel['src'])
-            pipe.hset(name, 'lang', channel['lang'])
-            pipe.hset(name, 'creds', channel['creds'])
-            pipe.hset(name, 'state', channel['state'])
+            pipe.hset(name, 'src', src)
+            pipe.hset(name, 'lang', lang)
+            pipe.hset(name, 'creds', creds)
+            pipe.hset(name, 'state', state)
             pipe.execute()
 
         response.set_data(json.dumps({
