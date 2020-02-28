@@ -1,0 +1,16 @@
+[Unit]
+Description=scribbled-bot - video transcript service
+After=syslog.target
+
+[Service]
+WorkingDirectory=/var/lib/scribbled/app
+ExecStart=/var/lib/scribbled/venv/bin/python scribbled_bot.py
+KillSignal=SIGQUIT
+ExecReload=/bin/kill -HUP $MAINPID
+Type=forking
+StandardError=syslog
+NotifyAccess=all
+SyslogIdentifier=scribbled-bot
+
+[Install]
+WantedBy=multi-user.target

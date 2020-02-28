@@ -1,0 +1,4 @@
+google-cloud-speech
+flask
+redis
+uwsgi
