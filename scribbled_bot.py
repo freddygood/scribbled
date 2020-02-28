@@ -17,7 +17,7 @@ from google.cloud.speech import types
 
 import config
 
-channels = getattr(config, 'channels', [])
+channels = getattr(config, 'channels')
 
 offset_sec = getattr(config, 'offset_sec')
 sample_rate = getattr(config, 'sample_rate')
