@@ -1,0 +1,7 @@
+{
+  "name": "one_cool_channel",
+  "lang": "en-US",
+  "src": "http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/sl.m3u8",
+  "creds": "XXXXXXXXXXX - base64 encoded credentials json file",
+  "state": "start"
+}
