@@ -191,7 +191,7 @@ cd /var/lib/scribbled/app
 #### systemd (Ubuntu 16) / RHEL7 / CentOS7
 
 ```
-cp -v /var/lib/scribbled/app/scribbled-*.service /etc/systemd/system/
+cp -v app/scribbled-*.service /etc/systemd/system/
 systemctl daemon-reload
 
 systemctl enable scribbled-api.service
@@ -231,7 +231,7 @@ restart scribbled-bot
 
 ```
 upstream scribbled {
-    server 127.0.0.1:8080;
+    server 127.0.0.1:8089;
 }
 ```
 
