@@ -3,11 +3,11 @@ Description=scribbled-bot - video transcript service
 After=syslog.target
 
 [Service]
-WorkingDirectory=/var/lib/scribbled/app
 ExecStart=/var/lib/scribbled/venv/bin/uwsgi --ini uwsgi.ini
+WorkingDirectory=/var/lib/scribbled/app
 KillSignal=SIGQUIT
 ExecReload=/bin/kill -HUP $MAINPID
-Type=forking
+Type=notify
 StandardError=syslog
 NotifyAccess=all
 SyslogIdentifier=scribbled-api
