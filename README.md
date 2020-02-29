@@ -73,7 +73,7 @@ The call accepts JSON body as a channel data
   "name": "ch3live",
   "lang": "en-US",
   "src": "http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/sl.m3u8",
-  "creds": "nNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAidm9pY2UtcmVjLTI2NjUyMiIsCiAgInByaXZhdGVfa2V5X2lkIjogIjBkODZhZjk1N2YzNGRiNTYzMGQ2M2M5ODU0OGZmOTZjNzJ3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvdXNlci0xJTQwdm9pY2UtcmVjLTI2NjUyMi5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIKfQo=",
+  "creds": "nNlcnZpY2VfYWNjb3VudCIsCiAgI3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvdXNlci0xJTQwdm9pY2UtcmVjLTI2NjUyMi5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIKfQo=",
   "state": "start"
 }
 ```
