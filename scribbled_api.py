@@ -19,6 +19,9 @@ debug = getattr(config, 'debug')
 redis_host = getattr(config, 'redis_host')
 redis_port = getattr(config, 'redis_port')
 
+r = redis.Redis(host=redis_host, port=redis_port, db=0)
+r.ping()
+
 
 @application.route('/api/list', methods=['GET'])
 def get_list():
@@ -247,10 +250,8 @@ def get_transcript(name):
 
 
 if __name__ == '__main__':
-    with redis.Redis(host=redis_host, port=redis_port, db=0) as r:
-        r.ping()
-        application.run(
-            debug = debug,
-            host = host,
-            port = port
-        )
+    application.run(
+        debug = debug,
+        host = host,
+        port = port
+    )

@@ -32,6 +32,15 @@ work_dir = getattr(config, 'work_dir')
 redis_host = getattr(config, 'redis_host')
 redis_port = getattr(config, 'redis_port')
 
+r = redis.Redis(host=redis_host, port=redis_port, db=0)
+r.ping()
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level = logging.DEBUG,
+    format = '%(asctime)s - %(levelname)s - %(message)s'
+)
+
 
 def update_pid(name, pid = 0):
     logger.debug('Updating pid for channel {} to {}'.format(name, pid))
@@ -274,25 +283,14 @@ def run_channels():
         control_channel(name, src, lang, creds, state)
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level = logging.DEBUG,
-    format = '%(asctime)s - %(levelname)s - %(message)s'
-)
-
 if __name__ == '__main__':
+    create_dir_first()
+    register_channels_first()
+    reset_pids_first()
+    reset_transcripts_first()
 
-    with redis.Redis(host=redis_host, port=redis_port, db=0) as r:
+    processes = {}
 
-        r.ping()
-
-        create_dir_first()
-        register_channels_first()
-        reset_pids_first()
-        reset_transcripts_first()
-
-        processes = {}
-
-        while True:
-            run_channels()
-            time.sleep(sleep_sec)
+    while True:
+        run_channels()
+        time.sleep(sleep_sec)
