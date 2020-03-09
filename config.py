@@ -4,9 +4,11 @@ host = '127.0.0.1'
 port = 8080
 
 sample_rate = 16000
-chunk_len = 10
-chunk_set_len = 3
+chunk_sec = 10
+chunk_set_len = 1
 offset_sec = 10
+
+transcript_set_len = 360
 
 sleep_sec = 5
 

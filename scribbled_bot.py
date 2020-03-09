@@ -19,13 +19,14 @@ import config
 
 channels = getattr(config, 'channels')
 
-offset_sec = getattr(config, 'offset_sec')
 sample_rate = getattr(config, 'sample_rate')
-chunk_len = getattr(config, 'chunk_len')
+chunk_sec = getattr(config, 'chunk_sec')
 chunk_set_len = getattr(config, 'chunk_set_len')
+offset_sec = getattr(config, 'offset_sec')
+transcript_set_len = getattr(config, 'transcript_set_len')
 sleep_sec = getattr(config, 'sleep_sec')
 
-chunk_size = int(sample_rate * chunk_len)
+chunk_bytes = int(sample_rate * chunk_sec)
 
 work_dir = getattr(config, 'work_dir')
 
@@ -113,13 +114,6 @@ def channel_loop(name, src, lang, creds):
     def transcript_chunk(data, lang):
         logger.debug('Transcription of incoming set of {} chunks'.format(len(data)))
 
-        client = speech.SpeechClient()
-        config = types.RecognitionConfig(
-            encoding = enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz = int(sample_rate),
-            language_code = lang)
-        streaming_config = types.StreamingRecognitionConfig(config = config)
-
         requests = (types.StreamingRecognizeRequest(audio_content = chunk)
             for chunk in data)
 
@@ -136,7 +130,25 @@ def channel_loop(name, src, lang, creds):
 
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds
 
+    client = speech.SpeechClient()
+    config = types.RecognitionConfig(
+        encoding = enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz = int(sample_rate),
+        language_code = lang,
+        max_alternatives = 1
+    )
+    streaming_config = types.StreamingRecognitionConfig(
+        config = config
+        # config = config,
+        # interim_results = True
+    )
+
     chunk_set = []
+    if r.hexists(name, 'transcript'):
+        logger.debug('Loading transcript of channel {} into current set'.format(name))
+        transcript_set = json.loads(r.hget(name, 'transcript'))
+    else:
+        transcript_set = []
 
     process = ffmpeg_process(src)
 
@@ -144,7 +156,7 @@ def channel_loop(name, src, lang, creds):
 
     while True:
 
-        chunk = process.stdout.read(chunk_size)
+        chunk = process.stdout.read(chunk_bytes)
         if not chunk:
             logger.warn('End of stream {}'.format(name))
             break
@@ -153,7 +165,9 @@ def channel_loop(name, src, lang, creds):
         chunk_set.append(chunk)
 
         while len(chunk_set) > chunk_set_len:
-            logger.debug('Popping oldest chunk from chunk set')
+            logger.debug('Chunk set length {} larger then limit {}, popping oldest item'.format(
+                len(chunk_set), chunk_set_len)
+            )
             chunk_set.pop(0)
 
         logger.debug('Transcription current set of {} chunks'.format(len(chunk_set)))
@@ -163,11 +177,22 @@ def channel_loop(name, src, lang, creds):
 
         if len(transcript):
             logger.debug('Updating channel {} transcription'.format(name))
-            transcript_set = {
-                'timestamp': timestamp,
-                'data': transcript
-            }
+            transcript_set.append({
+                timestamp: transcript
+            })
+            # transcript_set.append({
+            #     'timestamp': timestamp,
+            #     'data': transcript
+            # })
+
+            while len(transcript_set) > transcript_set_len:
+                logger.debug('Transcript set length {} larger then limit {}, popping oldest item'.format(
+                    len(transcript_set), transcript_set_len)
+                )
+                transcript_set.pop(0)
+
             r.hset(name, 'transcript', json.dumps(transcript_set))
+
 
     logger.error('Terminating channel {}'.format(name))
     if process.poll() is None:
@@ -229,15 +254,6 @@ def run_channels():
 
         global processes
 
-        # logger.debug('Got channel {} source {}'.format(name, src))
-        # logger.debug('Got channel {} lang {}'.format(name, lang))
-        # logger.debug('Got channel {} state {}'.format(name, state))
-
-        # if name in processes.keys():
-        #     logger.debug('name in processes.keys() = {}'.format(name in processes.keys()))
-        #     logger.debug('processes[{}].is_alive() = {}'.format(name, processes[name].is_alive()))
-        #     logger.debug('processes[{}].pid = {}'.format(name, processes[name].pid))
-
         if state == 'start':
             if name not in processes.keys() or not processes[name].is_alive():
                 logger.debug('Registering process for channel {}'.format(name))
@@ -287,7 +303,6 @@ if __name__ == '__main__':
     create_dir_first()
     register_channels_first()
     reset_pids_first()
-    reset_transcripts_first()
 
     processes = {}
 

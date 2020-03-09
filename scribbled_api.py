@@ -65,8 +65,8 @@ def get_list():
     return response
 
 
-@application.route('/api/register', methods=['POST'])
-def register_channel():
+@application.route('/api/register/<name2>', methods=['POST'])
+def register_channel(name2):
     application.logger.debug('Requested registration of channels')
 
     response = Response()
@@ -117,6 +117,7 @@ def register_channel():
     assert creds is not None, 'Channel {} has no field creds'.format(name)
     assert state is not None, 'Channel {} has no field state'.format(name)
 
+    assert name == name2, 'Channel name from URI differs from payload'
     assert '|' not in name, 'Channel name cannot have pipe symbol (|)'
     assert state in ['start', 'stop'], 'Channel {} state must be one of [start, stop] but found {}'.format(name, state)
 
@@ -202,9 +203,94 @@ def update_channel(name):
     return response
 
 
+@application.route('/api/purge/<name>', methods=['POST'])
+def purge_channel(name):
+    application.logger.debug('Requested purging of channel {}'.format(name))
+
+    response = Response()
+
+    try:
+        if r.exists(name):
+            if r.hexists(name, 'transcript'):
+                application.logger.debug('Purging of transcript of channel {}'.format(name))
+                r.hdel (name, 'transcript')
+                result = 'deleted'
+
+            else:
+                application.logger.debug('Channel {} has no transcript'.format(name))
+                result = 'unchanged'
+
+            response.set_data(json.dumps({
+                'name': name,
+                'result': result
+            }))
+            response.mimetype = 'application/json'
+            response.status_code = 200
+
+        else:
+            application.logger.warn('Channel {} not registered'.format(name))
+            response.set_data(json.dumps({
+                'name': name,
+                'result': 'channel not found'
+            }))
+            response.status_code = 404
+
+    except Exception as e:
+        application.logger.error('Unexpected exception: {0}'.format(e.message), exc_info=True)
+        response.set_data(json.dumps({
+            'name': name,
+            'result': 'unexpected error'
+        }))
+        response.status_code = 500
+
+    return response
+
+
+@application.route('/api/remove/<name>', methods=['POST'])
+def remove_channel(name):
+    application.logger.debug('Requested removing of channel {}'.format(name))
+
+    response = Response()
+
+    try:
+        if r.exists(name):
+            application.logger.debug('Removing of channel {}'.format(name))
+            r.delete(name)
+            response.set_data(json.dumps({
+                'name': name,
+                'result': 'removed'
+            }))
+            response.mimetype = 'application/json'
+            response.status_code = 200
+
+        else:
+            application.logger.warn('Channel {} not registered'.format(name))
+            response.set_data(json.dumps({
+                'name': name,
+                'result': 'channel not found'
+            }))
+            response.status_code = 404
+
+    except Exception as e:
+        application.logger.error('Unexpected exception: {0}'.format(e.message), exc_info=True)
+        response.set_data(json.dumps({
+            'name': name,
+            'result': 'unexpected error'
+        }))
+        response.status_code = 500
+
+    return response
+
+
 @application.route('/api/transcript/<name>', methods=['GET'])
 def get_transcript(name):
-    application.logger.debug('Requested transcript of channel {}'.format(name))
+    set = request.args.get('set')
+    if set is not None and set.isdigit():
+        set_int = int(set)
+        application.logger.debug('Requested set of {} transcript of channel {}'.format(set, name))
+    else:
+        set_int = 0
+        application.logger.debug('Requested transcript of channel {}'.format(name))
 
     response = Response()
 
@@ -213,11 +299,21 @@ def get_transcript(name):
             if r.hexists(name, 'transcript'):
                 application.logger.debug('Getting transcript of channel {}'.format(name))
                 transcript = json.loads(r.hget(name, 'transcript'))
-                response.set_data(json.dumps({
-                    'name': name,
-                    'transcript': transcript,
-                    'result': 'ok'
-                }))
+                if set_int:
+                    response.set_data(json.dumps({
+                        'name': name,
+                        'transcript': transcript[0-set_int:],
+                        'result': 'ok',
+                        'set': len(transcript[0-set_int:]),
+                        'full_set': len(transcript)
+                    }))
+                else:
+                    response.set_data(json.dumps({
+                        'name': name,
+                        'transcript': transcript,
+                        'result': 'ok',
+                        'full_set': len(transcript)
+                    }))
                 response.mimetype = 'application/json'
                 response.status_code = 200
 
